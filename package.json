@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "console": "bottender dev -- --console",
     "dev": "nodemon ./src/server.js",
+    "watch": "nodemon ./src/watch.js",
     "start": "node ./src/server.js",
     "prepare": "husky install"
   },

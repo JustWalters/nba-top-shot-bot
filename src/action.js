@@ -1,12 +1,24 @@
 const url = require('url');
 const axios = require('axios').default;
 const cheerio = require('cheerio');
+const mongoose = require('mongoose');
 
 const User = require('./models/User');
 const Moment = require('./models/Moment');
 const Alert = require('./models/Alert');
 
 const logger = require('./logger');
+
+const { MONGODB_URI } = process.env;
+
+(async () => {
+  await mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: true,
+    useUnifiedTopology: true,
+  });
+})()
 
 const sendHelp = async (context) => {
   await context.sendText(
@@ -76,13 +88,15 @@ const root = async (context) => {
 
     if (!context.nextState.userId) {
       const f = {
-        telegramChatId: context.event.message.chat.id,
+        // telegramChatId: context.event.message.chat.id,
+        clientId: 'jw',
       };
       const existedUser = await User.findOne(f).exec();
       if (!existedUser) {
         await User.create({
           ...f,
-          telegramUsername: context.event.message.chat.username,
+          // telegramUsername: context.event.message.chat.username,
+          clientUsername: 'jw',
         });
       }
       const user = await User.findOne(f).exec();
@@ -102,6 +116,8 @@ const root = async (context) => {
         commandEntity.offset,
         commandEntity.offset + commandEntity.length,
       );
+    } else {
+      command = context.event.message.text;
     }
     // const args = text
     //   .slice(commandEntity.offset + commandEntity.length)
@@ -282,12 +298,43 @@ const root = async (context) => {
             await Alert.findOneAndUpdate(f, {
               budget: context.nextState.settingAlert.budget,
             }).exec();
+
+            await context.sendText(
+              'Would you like to watch for specific serials? ("n" or pattern)',
+            );
+            context.nextState = {
+              ...context.nextState,
+              state: 'WATCH_WAITING_FOR_SERIAL',
+            };
+            break;
+          }
+
+          case 'WATCH_WAITING_FOR_SERIAL': {
+            const serialPattern = context.event.text.trim();
+            if (!['n', 'N'].includes(serialPattern)) {
+              context.nextState = {
+                ...context.nextState,
+                settingAlert: {
+                  ...context.nextState.settingAlert,
+                  serialPattern,
+                },
+              };
+              const f = {
+                user: context.nextState.userId,
+                moment: context.nextState.settingAlert.momentId,
+              };
+              await Alert.findOneAndUpdate(f, {
+                serialPattern: context.nextState.settingAlert.serialPattern,
+              }).exec();
+            }
+            
             context.nextState = {
               ...context.nextState,
               settingAlert: {
                 userId: null,
                 momentId: null,
                 budget: 0,
+                serialPattern: null,
               },
             };
             await context.sendText(
@@ -356,7 +403,8 @@ const root = async (context) => {
         switch (context.nextState.state) {
           case 'ACCOUNT__INIT': {
             const user = await User.findOne({
-              telegramChatId: context.event.message.chat.id,
+              // telegramChatId: context.event.message.chat.id,
+              clientId: 'jw'
             }).exec();
             if (!user.nbaTopShotUsername) {
               await context.sendText("What's your NBA Top Shot username?");
@@ -378,7 +426,8 @@ const root = async (context) => {
             const nbaTopShotUsername = context.event.text.trim();
             const user = await User.findOneAndUpdate(
               {
-                telegramChatId: context.event.message.chat.id,
+                // telegramChatId: context.event.message.chat.id,
+                clientId: 'jw',
               },
               { nbaTopShotUsername },
               { new: true },
@@ -462,7 +511,7 @@ See more details at https://status.nbatopshot.com/
                 const $ = cheerio.load(res.data);
                 const data = JSON.parse($('#__NEXT_DATA__').html()).props
                   .pageProps;
-                return data.marketCap;
+                return data.marketCap.value;
               })(),
               (async () => {
                 const res = await axios.get('https://momentranks.com/sales');

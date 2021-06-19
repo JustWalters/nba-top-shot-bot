@@ -26,6 +26,7 @@ module.exports = {
     settingAlert: {
       momentId: null,
       budget: 0,
+      serialPattern: null,
     },
   },
   channels: {

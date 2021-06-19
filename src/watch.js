@@ -54,8 +54,16 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
 }
 `;
 
+const serialMatches = (serialNumber, serialPattern) => {
+  if (!serialPattern) {
+    return true
+  }
+
+  return false
+}
+
 (async () => {
-  const client = getClient('telegram');
+  // const client = getClient('telegram');
 
   await mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
@@ -68,8 +76,14 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
 
   let res;
   let lastEndHeight;
-  setInterval(async () => {
-    res = await fcl.send([fcl.getLatestBlock(true)]).then(fcl.decode);
+  const intervalId =  setInterval(async () => {
+    try {
+      res = await fcl.send([fcl.getLatestBlock(true)]).then(fcl.decode);
+    } catch (err) {
+      console.error('First error', err)
+      clearInterval(intervalId)
+      return
+    }
     const blockHeight = res.height;
     if (blockHeight === lastEndHeight) {
       return;
@@ -79,9 +93,9 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
     lastEndHeight = endHeight;
 
     const evtType = 'A.c1e4f4f4c4257510.Market.MomentListed';
-    logger.info(
-      `Fetching ${evtType} events from block height ${startHeight} to ${endHeight}:`,
-    );
+    // logger.debug(
+    //   `Fetching ${evtType} events from block height ${startHeight} to ${endHeight}:`,
+    // );
     const listedEvts = await fcl
       .send([fcl.getEvents(evtType, startHeight, endHeight)])
       .then(fcl.decode);
@@ -120,7 +134,7 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
       serialNumber: moments[idx].serialNumber,
       price: Number(listedEvts[idx].data.price),
     }));
-    logger.info(JSON.stringify(listings));
+    // logger.info(JSON.stringify(listings));
 
     await Promise.all(
       listings.map(
@@ -145,22 +159,24 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
           if (moment) {
             await Promise.all(
               moment.alerts.map(async (alert) => {
-                if (price <= alert.budget) {
+                if (price <= alert.budget && serialMatches(serialNumber, alert.serialPattern)) {
                   const { user } = await alert.populate('user').execPopulate();
                   logger.info(`Sending notification for alert:${alert._id}...`);
-                  await client.sendMessage(
-                    user.telegramChatId,
-                    `*${playerName}*
-${playCategory}
-${setName}(Series ${setSeriesNumber})
-#${serialNumber}
-is just listed for *$${price.toFixed(2)}*!
-(which is within your budget ${alert.budget.toFixed(2)})
-Grab it now at ${moment.url}
-`,
-                    { parseMode: 'markdown' },
-                  );
+//                   await client.sendMessage(
+//                    user.clientId, // user.telegramChatId,
+//                     `*${playerName}*
+// ${playCategory}
+// ${setName}(Series ${setSeriesNumber})
+// #${serialNumber}
+// is just listed for *$${price.toFixed(2)}*!
+// (which is within your budget ${alert.budget.toFixed(2)})
+// Grab it now at ${moment.url}
+// `,
+//                     { parseMode: 'markdown' },
+//                   );
                   logger.info(`Sent notification for alert:${alert._id}`);
+                } else {
+                  logger.info(`Did not send notification for alert: ${JSON.stringify(moment, null, 2)}`);
                 }
               }),
             );
