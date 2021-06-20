@@ -1,4 +1,5 @@
 const { getClient } = require('bottender');
+const notifier = require('node-notifier');
 const mongoose = require('mongoose');
 const fcl = require('@onflow/fcl');
 const t = require('@onflow/types');
@@ -162,21 +163,16 @@ const serialMatches = (serialNumber, serialPattern) => {
                 if (price <= alert.budget && serialMatches(serialNumber, alert.serialPattern)) {
                   const { user } = await alert.populate('user').execPopulate();
                   logger.info(`Sending notification for alert:${alert._id}...`);
-//                   await client.sendMessage(
-//                    user.clientId, // user.telegramChatId,
-//                     `*${playerName}*
-// ${playCategory}
-// ${setName}(Series ${setSeriesNumber})
-// #${serialNumber}
-// is just listed for *$${price.toFixed(2)}*!
-// (which is within your budget ${alert.budget.toFixed(2)})
-// Grab it now at ${moment.url}
-// `,
-//                     { parseMode: 'markdown' },
-//                   );
-                  logger.info(`Sent notification for alert:${alert._id}`);
-                } else {
-                  logger.info(`Did not send notification for alert: ${JSON.stringify(moment, null, 2)}`);
+
+                  notifier.notify({
+                    title: 'Moment for sale',
+                    message: `${playerName} ${playCategory} ${setName} S${setSeriesNumber} #${serialNumber} - $${price.toFixed(2)}`,
+                    sound: true,
+                    open: moment.url,
+                    timeout: 24 * 60 * 60,
+                  })
+
+                  logger.debug(`Sent notification for alert:${alert._id}`);
                 }
               }),
             );
