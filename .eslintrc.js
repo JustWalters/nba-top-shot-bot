@@ -7,6 +7,9 @@ module.exports = {
   env: {
     node: true,
   },
+  rules: {
+    'no-underscore-dangle': 0,
+  },
   overrides: [
     {
       files: ['**/*.test.js'],

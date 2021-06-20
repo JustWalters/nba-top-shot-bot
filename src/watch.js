@@ -1,4 +1,3 @@
-const { getClient } = require('bottender');
 const notifier = require('node-notifier');
 const mongoose = require('mongoose');
 const fcl = require('@onflow/fcl');
@@ -6,16 +5,16 @@ const t = require('@onflow/types');
 
 const Moment = require('./models/Moment');
 const Alert = require('./models/Alert');
-const User = require('./models/User');
 
 const logger = require('./logger');
-const { serialMatches } = require('./utils')
+const { serialMatches } = require('./utils');
 
 require('dotenv').config();
 
 const { MONGODB_URI, FLOW_ACCESS_NODE } = process.env;
 
 const POLL_INTERVAL_IN_MS = 1000;
+const ALERT_POLL_INTERVAL_IN_MS = 12 * 60 * 60 * 1000;
 
 const GET_LISTED_MOMENT_SCRIPT = `
 import TopShot from 0x0b2a3299cc857e29
@@ -70,13 +69,26 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
 
   let res;
   let lastEndHeight;
-  const intervalId =  setInterval(async () => {
+  let momentlessAlerts;
+
+  const refreshMomentlessAlerts = async () => {
+    momentlessAlerts = await Alert.find({
+      serialPattern: { $exists: true },
+      moment: null,
+    }).exec();
+
+    setTimeout(refreshMomentlessAlerts, ALERT_POLL_INTERVAL_IN_MS);
+  };
+  refreshMomentlessAlerts();
+
+  const intervalId = setInterval(async () => {
     try {
       res = await fcl.send([fcl.getLatestBlock(true)]).then(fcl.decode);
     } catch (err) {
-      console.error('First error', err)
-      clearInterval(intervalId)
-      return
+      logger.error('First error', err);
+      clearInterval(intervalId);
+
+      return;
     }
     const blockHeight = res.height;
     if (blockHeight === lastEndHeight) {
@@ -150,26 +162,34 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
           })
             .populate('alerts')
             .exec();
-          if (moment) {
-            await Promise.all(
-              moment.alerts.map(async (alert) => {
-                if (price <= alert.budget && serialMatches(serialNumber, alert.serialPattern)) {
-                  const { user } = await alert.populate('user').execPopulate();
-                  logger.info(`Sending notification for alert:${alert._id}...`);
 
-                  notifier.notify({
-                    title: 'Moment for sale',
-                    message: `${playerName} ${playCategory} ${setName} S${setSeriesNumber} #${serialNumber} - $${price.toFixed(2)}`,
-                    sound: true,
-                    open: moment.url,
-                    timeout: 24 * 60 * 60,
-                  })
+          const alerts = [];
 
-                  logger.debug(`Sent notification for alert:${alert._id}`);
-                }
-              }),
-            );
-          }
+          if (moment) alerts.push(...moment.alerts);
+          if (momentlessAlerts) alerts.push(...momentlessAlerts);
+
+          await Promise.all(
+            alerts.map(async (alert) => {
+              if (
+                price <= alert.budget &&
+                serialMatches(serialNumber, alert.serialPattern)
+              ) {
+                logger.info(`Sending notification for alert:${alert._id}...`);
+
+                notifier.notify({
+                  title: 'Moment for sale',
+                  message: `${playerName} ${playCategory} ${setName} S${setSeriesNumber} #${serialNumber} - $${price.toFixed(
+                    2,
+                  )}`,
+                  sound: true,
+                  open: moment.url || 'https://nbatopshot.com', // TODO: Link directly to listing
+                  timeout: 24 * 60 * 60,
+                });
+
+                logger.debug(`Sent notification for alert:${alert._id}`);
+              }
+            }),
+          );
         },
       ),
     );

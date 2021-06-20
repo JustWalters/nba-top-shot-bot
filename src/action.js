@@ -18,7 +18,7 @@ const { MONGODB_URI } = process.env;
     useFindAndModify: true,
     useUnifiedTopology: true,
   });
-})()
+})();
 
 const sendHelp = async (context) => {
   await context.sendText(
@@ -217,44 +217,51 @@ const root = async (context) => {
           }
 
           case 'WATCH__WAITING_FOR_URL': {
-            const listingUrl = url.format(new URL(context.event.text.trim()), {
-              auth: false,
-              fragment: false,
-              search: false,
-            });
-            const res = await axios.get(listingUrl);
-            const $ = cheerio.load(res.data);
-            const momentData = JSON.parse($('#__NEXT_DATA__').html()).props
-              .pageProps.moment;
-            const {
-              playerName,
-              playCategory,
-              dateOfMoment,
-            } = momentData.play.stats;
-            const { flowName, flowSeriesNumber } = momentData.set;
-            const f = {
-              url: listingUrl,
-              playerName,
-              playCategory,
-              at: dateOfMoment,
-              setName: flowName,
-              setSeriesNumber: flowSeriesNumber,
-            };
-            const existedMoment = await Moment.findOne(f).exec();
-            if (!existedMoment) {
-              await Moment.create(f);
+            const input = context.event.text.trim();
+            if (!['n', 'N'].includes(input)) {
+              const listingUrl = url.format(new URL(input), {
+                auth: false,
+                fragment: false,
+                search: false,
+              });
+              const res = await axios.get(listingUrl);
+              const $ = cheerio.load(res.data);
+              const momentData = JSON.parse($('#__NEXT_DATA__').html()).props
+                .pageProps.moment;
+              const {
+                playerName,
+                playCategory,
+                dateOfMoment,
+              } = momentData.play.stats;
+              const { flowName, flowSeriesNumber } = momentData.set;
+              const f = {
+                url: listingUrl,
+                playerName,
+                playCategory,
+                at: dateOfMoment,
+                setName: flowName,
+                setSeriesNumber: flowSeriesNumber,
+              };
+              const existedMoment = await Moment.findOne(f).exec();
+              if (!existedMoment) {
+                await Moment.create(f);
+              }
+              const moment = await Moment.findOne(f).exec();
+              context.nextState = {
+                ...context.nextState,
+                settingAlert: {
+                  ...context.nextState.settingAlert,
+                  momentId: moment._id,
+                },
+              };
+              await context.sendText(
+                `Notify me when a ${moment.playerName} ${moment.playCategory} ${moment.setName}(Series ${moment.setSeriesNumber}) moment is listed below? (in USD)`,
+              );
+            } else {
+              await context.sendText(
+                `Notify me when any moment is listed below? (in USD)`,
+              );
             }
-            const moment = await Moment.findOne(f).exec();
-            context.nextState = {
-              ...context.nextState,
-              settingAlert: {
-                ...context.nextState.settingAlert,
-                momentId: moment._id,
-              },
-            };
-            await context.sendText(
-              `Notify me when a ${moment.playerName} ${moment.playCategory} ${moment.setName}(Series ${moment.setSeriesNumber}) moment is listed below? (in USD)`,
-            );
             context.nextState = {
               ...context.nextState,
               state: 'WATCH__WAITING_FOR_BUDGET',
@@ -309,9 +316,17 @@ const root = async (context) => {
             break;
           }
 
+          // TODO: Move before budget since there's validation here
+          // TODO: Allow multiple momentless alerts per user?
           case 'WATCH_WAITING_FOR_SERIAL': {
             const serialPattern = context.event.text.trim();
-            if (!['n', 'N'].includes(serialPattern)) {
+            if (['n', 'N'].includes(serialPattern)) {
+              if (!context.nextState.settingAlert.momentId) {
+                throw new Error(
+                  'You must provide a serial when not watching a specific moment',
+                );
+              }
+            } else {
               context.nextState = {
                 ...context.nextState,
                 settingAlert: {
@@ -327,7 +342,7 @@ const root = async (context) => {
                 serialPattern: context.nextState.settingAlert.serialPattern,
               }).exec();
             }
-            
+
             context.nextState = {
               ...context.nextState,
               settingAlert: {
@@ -404,7 +419,7 @@ const root = async (context) => {
           case 'ACCOUNT__INIT': {
             const user = await User.findOne({
               // telegramChatId: context.event.message.chat.id,
-              clientId: 'jw'
+              clientId: 'jw',
             }).exec();
             if (!user.nbaTopShotUsername) {
               await context.sendText("What's your NBA Top Shot username?");
