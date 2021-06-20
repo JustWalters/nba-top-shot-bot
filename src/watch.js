@@ -9,6 +9,7 @@ const Alert = require('./models/Alert');
 const User = require('./models/User');
 
 const logger = require('./logger');
+const { serialMatches } = require('./utils')
 
 require('dotenv').config();
 
@@ -54,14 +55,6 @@ pub fun main(playId: UInt32, setId: UInt32): MomentMeta {
   return MomentMeta(playId: playId, setId: setId)
 }
 `;
-
-const serialMatches = (serialNumber, serialPattern) => {
-  if (!serialPattern) {
-    return true
-  }
-
-  return false
-}
 
 (async () => {
   // const client = getClient('telegram');
