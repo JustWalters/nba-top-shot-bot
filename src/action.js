@@ -318,6 +318,7 @@ const root = async (context) => {
 
           // TODO: Move before budget since there's validation here
           // TODO: Allow multiple momentless alerts per user?
+          // TODO: Create an (editable?) library of common serials/patterns
           case 'WATCH_WAITING_FOR_SERIAL': {
             const serialPattern = context.event.text.trim();
             if (['n', 'N'].includes(serialPattern)) {
@@ -331,7 +332,8 @@ const root = async (context) => {
                 ...context.nextState,
                 settingAlert: {
                   ...context.nextState.settingAlert,
-                  serialPattern,
+                  serialPattern:
+                    serialPattern === 'y' ? '/^[39]+$/' : serialPattern,
                 },
               };
               const f = {
