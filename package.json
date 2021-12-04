@@ -7,15 +7,19 @@
   },
   "scripts": {
     "console": "bottender dev -- --console",
-    "dev": "nodemon ./src/server.js",
+    "dev": "nodemon ./src/server",
     "watch": "nodemon ./src/watch.js",
     "start": "node ./src/server.js",
     "prepare": "husky install",
     "test": "jest"
   },
   "dependencies": {
+    "@admin-bro/koa": "^1.1.1",
+    "@admin-bro/mongoose": "^1.1.0",
+    "@koa/router": "^10.1.1",
     "@onflow/fcl": "^0.0.76",
     "@onflow/types": "^0.0.4",
+    "admin-bro": "^4.0.1",
     "axios": "^0.21.1",
     "bottender": "1.5.1-alpha.8",
     "cheerio": "^1.0.0-rc.5",
@@ -24,6 +28,7 @@
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.0.0",
+    "koa2-formidable": "^1.0.3",
     "mongoose": "^6.0.12",
     "node-notifier": "^10.0.0",
     "nodemon": "^2.0.7",

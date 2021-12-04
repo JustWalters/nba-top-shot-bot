@@ -4,7 +4,9 @@ const bodyParser = require('koa-bodyparser');
 const { bottender } = require('bottender');
 const mongoose = require('mongoose');
 
-const logger = require('./logger');
+const logger = require('../logger');
+
+const useAdminPanel = require('./useAdminPanel');
 
 require('dotenv').config();
 
@@ -34,6 +36,7 @@ const { NODE_ENV, PORT, KEY, MONGODB_URI } = process.env;
       ctx.req.rawBody = ctx.request.rawBody;
       return next();
     });
+    useAdminPanel(server);
 
     const router = new Router();
 

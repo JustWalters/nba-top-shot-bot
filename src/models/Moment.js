@@ -21,6 +21,6 @@ const momentSchema = new Schema(
 
 momentSchema.index({ playerName: 1 });
 
-const moment = mongoose.model('Moment', momentSchema);
+const Moment = mongoose.model('Moment', momentSchema);
 
-module.exports = moment;
+module.exports = Moment;
