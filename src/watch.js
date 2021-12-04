@@ -115,12 +115,7 @@ const notify = async (listing, moment, alert, client, user) => {
 const start = async () => {
   const client = getClient('telegram');
 
-  await mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(MONGODB_URI);
 
   fcl.config().put('accessNode.api', FLOW_ACCESS_NODE);
 
@@ -251,7 +246,7 @@ const start = async () => {
                   price <= alert.budget &&
                   serialMatches(serialNumber, alert.serialPattern)
                 ) {
-                  const { user } = await alert.populate('user').execPopulate();
+                  const { user } = await alert.populate('user');
 
                   await notify(
                     {

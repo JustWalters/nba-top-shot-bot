@@ -12,12 +12,7 @@ const logger = require('./logger');
 const { MONGODB_URI } = process.env;
 
 (async () => {
-  await mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(MONGODB_URI);
 })();
 
 const sendHelp = async (context) => {
@@ -382,19 +377,22 @@ const root = async (context) => {
               .populate('watchedAlerts')
               .exec();
             const watchedAlerts = await Promise.all(
-              user.watchedAlerts.map((alert) =>
-                alert.populate('moment').execPopulate(),
-              ),
+              user.watchedAlerts.map((alert) => alert.populate('moment')),
             );
             await context.sendText(
               watchedAlerts
+                .filter((alert) => !!alert.moment)
                 .map(
                   (alert, idx) =>
                     `${idx + 1}. ${alert.moment.playerName} ${
                       alert.moment.playCategory
-                    } ${alert.moment.setName}(Series ${
+                    } ${alert.moment.setName} (Series ${
                       alert.moment.setSeriesNumber
-                    }) under $${alert.budget}`,
+                    }) under $${alert.budget}${
+                      alert.serialPattern
+                        ? `with serial ${alert.serialPattern}`
+                        : ''
+                    }`,
                 )
                 .join('\n'),
             );

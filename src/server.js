@@ -22,12 +22,7 @@ const { NODE_ENV, PORT, KEY, MONGODB_URI } = process.env;
 
     await bot.prepare();
 
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useCreateIndex: true,
-      useFindAndModify: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(MONGODB_URI);
 
     const server = new Koa();
     server.keys = [KEY];
