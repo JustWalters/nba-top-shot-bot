@@ -2,10 +2,18 @@ const winston = require('winston');
 
 require('dotenv').config();
 
-const { NODE_ENV } = process.env;
+const { NODE_ENV, LOG_LEVEL } = process.env;
+
+const logLevel =
+  // eslint-disable-next-line no-nested-ternary
+  LOG_LEVEL === 'undefined'
+    ? NODE_ENV === 'production'
+      ? 'info'
+      : 'silly'
+    : LOG_LEVEL;
 
 const logger = winston.createLogger({
-  level: NODE_ENV === 'production' ? 'info' : 'silly',
+  level: logLevel,
   transports: [new winston.transports.Console()],
   format: winston.format.combine(
     winston.format.timestamp(),

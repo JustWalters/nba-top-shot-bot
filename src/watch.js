@@ -70,6 +70,8 @@ const notify = async (listing, moment, alert, client, user) => {
     playCategory,
     setName,
     setSeriesNumber,
+    setId,
+    playId,
     serialNumber,
     price,
   } = listing;
@@ -78,14 +80,18 @@ const notify = async (listing, moment, alert, client, user) => {
     price,
   )}`;
   logger.info(`Sending notification for alert:${alert._id}: ${message}`);
+  const url =
+    moment?.url ||
+    // TODO: We can still improve this I'm sure
+    `https://livetoken.co/listings/topshot?setID=${setId}&playID=${playId}&sortOrder=ListedDate_DESC`;
 
   if (NODE_ENV === 'local') {
     notifier.notify({
       title: 'Moment for sale',
       message,
       // Basso, Frog, Glass
-      sound: 'Purr' || (alert.importance ? 'Purr' : true),
-      open: moment?.url || 'https://nbatopshot.com/search', // TODO: Link directly to listing
+      sound: 'Purr' || (alert.importance ? 'Basso' : true),
+      open: url,
       timeout: 12 * 60 * 60,
     });
   }
@@ -100,7 +106,7 @@ const notify = async (listing, moment, alert, client, user) => {
         #${serialNumber}
         is just listed for *${currencyFormatter.format(price)}*!
         (which is within your budget ${currencyFormatter.format(alert.budget)})
-        Grab it now at ${moment?.url || 'https://nbatopshot.com/search'}
+        Grab it now at ${url}
         `,
         { parseMode: 'markdown' },
       );
@@ -209,6 +215,8 @@ const start = async () => {
           at: momentMetas[idx].playMetaData.DateOfMoment,
           setName: momentMetas[idx].setName,
           setSeriesNumber: momentMetas[idx].setSeries,
+          setId: moments[idx].setId,
+          playId: moments[idx].playId,
           serialNumber: moments[idx].serialNumber,
           price: Number(listedEvts[idx].data.price),
         }));
@@ -222,6 +230,8 @@ const start = async () => {
             at,
             setName,
             setSeriesNumber,
+            setId,
+            playId,
             serialNumber,
             price,
           }) => {
@@ -255,6 +265,8 @@ const start = async () => {
                       at,
                       setName,
                       setSeriesNumber,
+                      setId,
+                      playId,
                       serialNumber,
                       price,
                     },
