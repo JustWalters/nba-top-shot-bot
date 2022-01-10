@@ -106,7 +106,7 @@ const notify = async (listing, moment, alert, client, user) => {
         #${serialNumber}
         is just listed for *${currencyFormatter.format(price)}*!
         (which is within your budget ${currencyFormatter.format(alert.budget)})
-        Grab it now at ${url}
+        [Grab it now](${url})
         `,
         { parseMode: 'markdown' },
       );
