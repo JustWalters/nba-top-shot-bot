@@ -10,7 +10,7 @@ const Alert = require('./models/Alert');
 require('./models/User'); // Need to import/execute so Mongoose registers model
 
 const logger = require('./logger');
-const { serialMatches } = require('./utils');
+const { serialMatches, getSeriesNumber } = require('./utils');
 
 require('dotenv').config();
 
@@ -76,9 +76,9 @@ const notify = async (listing, moment, alert, client, user) => {
     price,
   } = listing;
 
-  const message = `${playerName} ${playCategory} ${setName} S${setSeriesNumber} #${serialNumber} - ${currencyFormatter.format(
-    price,
-  )}`;
+  const message = `${playerName} ${playCategory} ${setName} S${getSeriesNumber(
+    setSeriesNumber,
+  )} #${serialNumber} - ${currencyFormatter.format(price)}`;
   logger.info(`Sending notification for alert:${alert._id}: ${message}`);
   const url =
     moment?.url ||
@@ -102,7 +102,7 @@ const notify = async (listing, moment, alert, client, user) => {
         user.telegramChatId,
         `*${playerName}*
         ${playCategory}
-        ${setName} (Series ${setSeriesNumber})
+        ${setName} (Series ${getSeriesNumber(setSeriesNumber)})
         #${serialNumber}
         is just listed for *${currencyFormatter.format(price)}*!
         (which is within your budget ${currencyFormatter.format(alert.budget)})

@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const { getSeriesNumber } = require('../utils');
+
 const { Schema } = mongoose;
 
 const momentSchema = new Schema(
@@ -16,10 +18,19 @@ const momentSchema = new Schema(
       default: [],
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+  },
 );
 
 momentSchema.index({ playerName: 1 });
+
+momentSchema.virtual('description').get(function getDescription() {
+  const date = new Date(this.at).toDateString();
+  const seriesNumber = getSeriesNumber(this.setSeriesNumber);
+  return `${this.playerName} ${this.playCategory} ${date} ${this.setName} (Series ${seriesNumber})`;
+});
 
 const Moment = mongoose.model('Moment', momentSchema);
 

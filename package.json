@@ -8,8 +8,8 @@
   "scripts": {
     "console": "bottender dev -- --console",
     "dev": "nodemon ./src/server",
-    "watch": "nodemon ./src/watch.js",
-    "start": "node ./src/server.js",
+    "watch": "nodemon ./src/watch",
+    "start": "node ./src/server",
     "prepare": "husky install",
     "test": "jest"
   },

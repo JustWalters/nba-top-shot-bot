@@ -6,11 +6,38 @@ const User = require('../models/User');
 const Alert = require('../models/Alert');
 const Moment = require('../models/Moment');
 
+const MomentViewer = AdminBro.bundle('./admin-components/MomentViewer');
+
 const useAdminPanel = (server) => {
   AdminBro.registerAdapter(AdminBroMongoose);
 
   const adminBro = new AdminBro({
-    resources: [User, Alert, Moment],
+    resources: [
+      User,
+      {
+        resource: Alert,
+        options: {
+          editProperties: ['user', 'moment', 'budget', 'serialPattern'],
+          properties: {
+            moment: {
+              components: {
+                show: MomentViewer,
+              },
+            },
+          },
+        },
+      },
+      {
+        resource: Moment,
+        options: {
+          properties: {
+            description: {
+              isTitle: true,
+            },
+          },
+        },
+      },
+    ],
     rootPath: '/admin',
   });
 

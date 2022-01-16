@@ -18,4 +18,13 @@ const serialMatches = (serialNumber, serialPattern) => {
   return serialNumber.toString() === serialPattern;
 };
 
-module.exports = { serialMatches };
+const getSeriesNumber = (blockChainSeriesNumber) => {
+  return {
+    1: '1',
+    2: '2',
+    3: 'Summer 2021',
+    4: '3',
+  }[blockChainSeriesNumber];
+};
+
+module.exports = { serialMatches, getSeriesNumber };
