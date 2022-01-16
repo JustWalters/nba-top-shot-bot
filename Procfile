@@ -1,1 +1,1 @@
-worker: npm run watch
+worker: npm run serve-and-watch
