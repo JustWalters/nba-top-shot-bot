@@ -10,13 +10,16 @@
     "dev": "nodemon ./src/server.js",
     "watch": "nodemon ./src/watch.js",
     "start": "node ./src/server",
-    "serve-and-watch": "run-p -l start watch",
+    "serve-and-watch": "run-p -cl start watch",
     "prepare": "husky install",
     "test": "jest"
   },
   "dependencies": {
     "@admin-bro/koa": "^1.1.1",
     "@admin-bro/mongoose": "^1.1.0",
+    "@babel/core": "^7.13.10",
+    "@babel/eslint-parser": "^7.13.10",
+    "@babel/preset-env": "^7.13.10",
     "@koa/router": "^10.1.1",
     "@onflow/fcl": "^0.0.76",
     "@onflow/types": "^0.0.4",
@@ -37,9 +40,6 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.10",
-    "@babel/eslint-parser": "^7.13.10",
-    "@babel/preset-env": "^7.13.10",
     "eslint": "^7.2.0",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-config-prettier": "^8.1.0",
