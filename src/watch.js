@@ -21,6 +21,17 @@ const STORAGE_FILE_NAME = './storage';
 
 process.setMaxListeners(2);
 
+const leagueMatches = (moment, league) => {
+  if (!league) return true;
+
+  if (league === 'WNBA') {
+    const WNBA_SETS = ['WNBA 2021', 'WNBA Run It Back', 'WNBA: Best of 2021'];
+    return WNBA_SETS.includes(moment.setName);
+  }
+
+  return true;
+};
+
 const GET_LISTED_MOMENT_SCRIPT = `
 import TopShot from 0x0b2a3299cc857e29
 import Market from 0xc1e4f4f4c4257510
@@ -254,6 +265,7 @@ const start = async () => {
               alerts.map(async (alert) => {
                 if (
                   price <= alert.budget &&
+                  leagueMatches({ setName }, alert.league) &&
                   serialMatches(serialNumber, alert.serialPattern)
                 ) {
                   const { user } = await alert.populate('user');

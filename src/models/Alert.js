@@ -8,6 +8,7 @@ const alertSchema = new Schema(
     moment: { type: Schema.Types.ObjectId, ref: 'Moment' },
     budget: { type: Schema.Types.Number, default: 0 },
     serialPattern: { type: Schema.Types.String },
+    league: { type: Schema.Types.String, enum: ['NBA', 'WNBA'] },
   },
   { timestamps: true },
 );
