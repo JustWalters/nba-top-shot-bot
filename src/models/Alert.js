@@ -4,10 +4,16 @@ const { Schema } = mongoose;
 
 const alertSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: 'User', require: true },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      require: true,
+      required: true,
+    },
     moment: { type: Schema.Types.ObjectId, ref: 'Moment' },
     budget: { type: Schema.Types.Number, default: 0 },
     serialPattern: { type: Schema.Types.String },
+    importance: { type: Schema.Types.Number }, // 1 - 5, 1 highest?
     league: { type: Schema.Types.String, enum: ['NBA', 'WNBA'] },
   },
   { timestamps: true },

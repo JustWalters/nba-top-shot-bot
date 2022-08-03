@@ -105,25 +105,27 @@ const notify = async (listing, moment, alert, client, user) => {
       open: url,
       timeout: 12 * 60 * 60,
     });
-  }
-
-  try {
-    if (user.telegramChatId) {
-      await client.sendMessage(
-        user.telegramChatId,
-        `*${playerName}*
-        ${playCategory}
-        ${setName} (Series ${getSeriesNumber(setSeriesNumber)})
-        #${serialNumber}
-        is just listed for *${currencyFormatter.format(price)}*!
-        (which is within your budget ${currencyFormatter.format(alert.budget)})
-        [Grab it now](${url})
-        `,
-        { parseMode: 'markdown' },
-      );
+  } else {
+    try {
+      if (user.telegramChatId) {
+        await client.sendMessage(
+          user.telegramChatId,
+          `*${playerName}*
+          ${playCategory}
+          ${setName} (Series ${getSeriesNumber(setSeriesNumber)})
+          #${serialNumber}
+          is just listed for *${currencyFormatter.format(price)}*!
+          (which is within your budget ${currencyFormatter.format(
+            alert.budget,
+          )})
+          [Grab it now](${url})
+          `,
+          { parseMode: 'markdown' },
+        );
+      }
+    } catch (error) {
+      logger.error('Telegram', error);
     }
-  } catch (error) {
-    logger.error('Telegram', error);
   }
 
   logger.debug(`Sent notification for alert:${alert._id}`);

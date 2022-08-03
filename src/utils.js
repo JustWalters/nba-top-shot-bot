@@ -24,6 +24,7 @@ const getSeriesNumber = (blockChainSeriesNumber) => {
     2: '2',
     3: 'Summer 2021',
     4: '3',
+    5: '4',
   }[blockChainSeriesNumber];
 };
 

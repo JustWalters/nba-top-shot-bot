@@ -7,6 +7,7 @@ const User = require('./models/User');
 const Moment = require('./models/Moment');
 const Alert = require('./models/Alert');
 
+const Service = require('./server/service');
 const logger = require('./logger');
 
 const { MONGODB_URI } = process.env;
@@ -214,29 +215,22 @@ const root = async (context) => {
           case 'WATCH__WAITING_FOR_URL': {
             const input = context.event.text.trim();
             if (!['n', 'N'].includes(input)) {
-              const listingUrl = url.format(new URL(input), {
-                auth: false,
-                fragment: false,
-                search: false,
-              });
-              const res = await axios.get(listingUrl);
-              const $ = cheerio.load(res.data);
-              const momentData = JSON.parse($('#__NEXT_DATA__').html()).props
-                .pageProps.moment;
-              const {
-                playerName,
-                playCategory,
-                dateOfMoment,
-              } = momentData.play.stats;
-              const { flowName, flowSeriesNumber } = momentData.set;
-              const f = {
-                url: listingUrl,
-                playerName,
-                playCategory,
-                at: dateOfMoment,
-                setName: flowName,
-                setSeriesNumber: flowSeriesNumber,
-              };
+              // const listingUrl = url.format(new URL(input), {
+              //   auth: false,
+              //   fragment: false,
+              //   search: false,
+              // });
+              // const res = await axios.get(listingUrl);
+              // const $ = cheerio.load(res.data);
+              // const momentData = JSON.parse($('#__NEXT_DATA__').html()).props
+              //   .pageProps.moment;
+              // const {
+              //   playerName,
+              //   playCategory,
+              //   dateOfMoment,
+              // } = momentData.play.stats;
+              // const { flowName, flowSeriesNumber } = momentData.set;
+              const f = await Service.getMomentData(input);
               const existedMoment = await Moment.findOne(f).exec();
               if (!existedMoment) {
                 await Moment.create(f);
@@ -282,20 +276,21 @@ const root = async (context) => {
             };
             const existedAlert = await Alert.findOne(f).exec();
             if (!existedAlert) {
-              const alert = await Alert.create(f);
-              await Moment.findByIdAndUpdate(
-                context.nextState.settingAlert.momentId,
-                {
-                  $push: {
-                    alerts: alert._id,
-                  },
-                },
-              ).exec();
-              await User.findByIdAndUpdate(context.nextState.userId, {
-                $push: {
-                  watchedAlerts: alert._id,
-                },
-              }).exec();
+              await Service.createAlert(f);
+              // const alert = await Alert.create(f);
+              // await Moment.findByIdAndUpdate(
+              //   context.nextState.settingAlert.momentId,
+              //   {
+              //     $push: {
+              //       alerts: alert._id,
+              //     },
+              //   },
+              // ).exec();
+              // await User.findByIdAndUpdate(context.nextState.userId, {
+              //   $push: {
+              //     watchedAlerts: alert._id,
+              //   },
+              // }).exec();
             }
             await Alert.findOneAndUpdate(f, {
               budget: context.nextState.settingAlert.budget,
@@ -390,7 +385,7 @@ const root = async (context) => {
                       alert.moment.setSeriesNumber
                     }) under $${alert.budget}${
                       alert.serialPattern
-                        ? `with serial ${alert.serialPattern}`
+                        ? ` with serial ${alert.serialPattern}`
                         : ''
                     }`,
                 )

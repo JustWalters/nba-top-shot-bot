@@ -5,6 +5,7 @@ import { Box } from '@admin-bro/design-system';
 import { getSeriesNumber } from '../../utils';
 
 const MomentViewer: FC<BasePropertyProps> = (props) => {
+  // TODO: Handle moment doesn't exist
   const moment = props.record.populated.moment.params;
 
   return (
