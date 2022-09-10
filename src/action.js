@@ -390,7 +390,7 @@ const root = async (context) => {
                       alert.moment.setSeriesNumber
                     }) under $${alert.budget}${
                       alert.serialPattern
-                        ? `with serial ${alert.serialPattern}`
+                        ? ` with serial ${alert.serialPattern}`
                         : ''
                     }`,
                 )

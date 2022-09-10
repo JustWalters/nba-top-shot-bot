@@ -19,12 +19,17 @@ const serialMatches = (serialNumber, serialPattern) => {
 };
 
 const getSeriesNumber = (blockChainSeriesNumber) => {
-  return {
+  const seriesNumber = {
     1: '1',
     2: '2',
     3: 'Summer 2021',
     4: '3',
+    5: '4',
   }[blockChainSeriesNumber];
+  if (seriesNumber) {
+    return seriesNumber;
+  }
+  return blockChainSeriesNumber - 1;
 };
 
 module.exports = { serialMatches, getSeriesNumber };

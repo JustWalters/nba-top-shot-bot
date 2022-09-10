@@ -26,7 +26,9 @@ const leagueMatches = (moment, league) => {
 
   if (league === 'WNBA') {
     const WNBA_SETS = ['WNBA 2021', 'WNBA Run It Back', 'WNBA: Best of 2021'];
-    return WNBA_SETS.includes(moment.setName);
+    return (
+      WNBA_SETS.includes(moment.setName) || moment.setName.includes('WNBA')
+    );
   }
 
   return true;
@@ -105,13 +107,12 @@ const notify = async (listing, moment, alert, client, user) => {
       open: url,
       timeout: 12 * 60 * 60,
     });
-  }
-
-  try {
-    if (user.telegramChatId) {
-      await client.sendMessage(
-        user.telegramChatId,
-        `*${playerName}*
+  } else {
+    try {
+      if (user.telegramChatId) {
+        await client.sendMessage(
+          user.telegramChatId,
+          `*${playerName}*
         ${playCategory}
         ${setName} (Series ${getSeriesNumber(setSeriesNumber)})
         #${serialNumber}
@@ -119,11 +120,12 @@ const notify = async (listing, moment, alert, client, user) => {
         (which is within your budget ${currencyFormatter.format(alert.budget)})
         [Grab it now](${url})
         `,
-        { parseMode: 'markdown' },
-      );
+          { parseMode: 'markdown' },
+        );
+      }
+    } catch (error) {
+      logger.error('Telegram', error);
     }
-  } catch (error) {
-    logger.error('Telegram', error);
   }
 
   logger.debug(`Sent notification for alert:${alert._id}`);
